@@ -63,7 +63,7 @@ SnapMoment is a professional-grade, full-stack event photography platform design
 
 1. **Clone the repository:**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/JoelJose212/SnapMoment-App.git
    cd SnapMoment-App
    ```
 
