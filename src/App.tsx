@@ -22,6 +22,7 @@ import GalleryPage from './pages/guest/GalleryPage'
 
 // Photographer
 import PhotographerLayout from './pages/photographer/PhotographerLayout'
+import PhotographerDashboard from './pages/photographer/PhotographerDashboard'
 import PhotographerEvents from './pages/photographer/PhotographerEvents'
 import PhotographerUpload from './pages/photographer/PhotographerUpload'
 import PhotographerQR from './pages/photographer/PhotographerQR'
@@ -68,7 +69,8 @@ export default function App() {
 
         {/* Photographer - protected */}
         <Route path="/photographer" element={<ProtectedRoute requiredRole="photographer"><PhotographerLayout /></ProtectedRoute>}>
-          <Route index element={<PhotographerEvents />} />
+          <Route index element={<PhotographerDashboard />} />
+          <Route path="dashboard" element={<PhotographerDashboard />} />
           <Route path="events" element={<PhotographerEvents />} />
           <Route path="events/:id/upload" element={<PhotographerUpload />} />
           <Route path="events/:id/qr" element={<PhotographerQR />} />
