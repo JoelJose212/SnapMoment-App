@@ -81,11 +81,16 @@ export const eventsApi = {
 
 // Photo endpoints
 export const photosApi = {
-  upload: (eventId: string, formData: FormData, onProgress?: (p: number) => void) =>
-    api.post(`/api/events/${eventId}/photos`, formData, {
+  upload: (eventId: string, formData: FormData, onProgress?: (p: number) => void, vectors?: number[][]) => {
+    // If vectors are provided, append them as a JSON string to the form data
+    if (vectors) {
+      formData.append('face_vectors', JSON.stringify(vectors))
+    }
+    return api.post(`/api/events/${eventId}/photos`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
       onUploadProgress: (e) => onProgress && onProgress(Math.round((e.loaded * 100) / (e.total || 1))),
-    }),
+    })
+  },
   list: (eventId: string) => api.get(`/api/events/${eventId}/photos`),
   delete: (eventId: string, photoId: string) => api.delete(`/api/events/${eventId}/photos/${photoId}`),
   deleteAll: (eventId: string) => api.delete(`/api/events/${eventId}/photos`),

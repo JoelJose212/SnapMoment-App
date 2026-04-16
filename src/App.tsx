@@ -1,7 +1,8 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import CustomCursor from './components/shared/CustomCursor'
 import ProtectedRoute from './components/shared/ProtectedRoute'
+import { isNative } from './lib/platform'
 
 // Pages
 import HomePage from './pages/HomePage'
@@ -46,14 +47,14 @@ export default function App() {
         <Toaster position="top-center" reverseOrder={false} />
         <CustomCursor />
       <Routes>
-        {/* Public */}
-        <Route path="/" element={<HomePage />} />
-        <Route path="/demo" element={<DemoPage />} />
+        {/* Public & Redirect Logic */}
+        <Route path="/" element={isNative ? <Navigate to="/login" replace /> : <HomePage />} />
+        <Route path="/demo" element={isNative ? <Navigate to="/login" replace /> : <DemoPage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="/contact" element={<ContactPage />} />
-        <Route path="/pricing" element={<PricingPage />} />
+        <Route path="/signup" element={isNative ? <Navigate to="/login" replace /> : <SignupPage />} />
+        <Route path="/about" element={isNative ? <Navigate to="/login" replace /> : <AboutPage />} />
+        <Route path="/contact" element={isNative ? <Navigate to="/login" replace /> : <ContactPage />} />
+        <Route path="/pricing" element={isNative ? <Navigate to="/login" replace /> : <PricingPage />} />
 
         {/* Guest flow */}
         <Route path="/event/:token" element={<EventLandingPage />} />
