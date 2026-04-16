@@ -1,54 +1,54 @@
-# 📸 SnapMoment
+# 📸 SnapMoment: Elite Edition
 
-**Elevate Your Event Photography with AI-Powered Magic**
+**The World's Most Intelligent AI Event Photography Operating System.**
 
-SnapMoment is a professional-grade, full-stack event photography platform designed to transform how photographers deliver photos and how guests experience memories. Leveraging cutting-edge AI for facial recognition and seamless mobile integration, SnapMoment ensures that every guest finds their perfect shot instantly.
+SnapMoment is a professional-grade, "Intelligence-First" event photography platform designed for high-stakes operational reliability. Unlike standard gallery apps, SnapMoment targets the hardware monitoring and real-time AI processing required by professional photographers at weddings, corporate galas, and global events.
 
 ---
 
-## 🚀 Key Features
+## 🚀 Elite Operational Features
 
-### 🤖 AI-Powered Facial Recognition
-- **Instant Matching:** Guests can find all photos they appear in by simply uploading a selfie or using the live capture UI.
-- **MediaPipe Integration:** High-performance, client-side vision tasks for robust and private face matching.
+### 🛡️ VIP Neural Guard (Missing Guest AI)
+**Never miss a critical moment.** Our on-device AI monitors coverage for your most important guests in real-time.
+-   **Neural Registration**: Snaps a reference photo of VIPs (Bride, Groom, VIPs) to calculate unique 512-dim face vectors.
+-   **Coverage Mapping**: Every captured frame is cross-referenced against your VIP list on the fly.
+-   **Intelligence Alerts**: Active background monitoring alerts the photographer via local device notifications if a VIP hasn't been captured in over 30 minutes.
 
-### 📸 Professional Photographer Suite
-- **Live RAW Tethering:** Real-time photo syncing from professional cameras directly to the platform.
-- **Sequential Batch Uploads:** Optimized handling for large event datasets (6GB+) with full system stability.
-- **Event Dashboard:** Comprehensive management of galleries, uploads, and event-specific settings.
+### 🌪️ Neural Offline Queue
+**High-speed ingestion without network bottlenecks.**
+-   **Persistent Local Cache**: Uses **IndexedDB** to store image blobs and AI vectors locally when the "Grid" is offline.
+-   **Background Auto-Sync**: Ingest photos instantly and move on; the app intelligently synchronizes data to the cloud in the background with automatic retry logic.
+-   **Reliability First**: Photos persist even if the device restarts or the app is closed mid-sync.
 
-### 💳 Business & Billing
-- **Automated Invoicing:** Integrated with Stripe and Razorpay for seamless photographer onboarding and subscription management.
-- **Subscription Tiers:** Flexible plans (Free, Pro, Studio) tailored to photographers of all scales.
-- **SMTP Integration:** Automated delivery of professional invoices via Gmail.
+### 🕹️ Mission Control Dashboard
+**Real-time telemetry for professional peace-of-mind.**
+-   **Hardware Health**: Live monitoring of battery levels, charging status, and network strength (Direct Grid vs. Offline Mode).
+-   **Sync Pulse**: A visual telemetry indicator showing the depth of your neural sync queue.
+-   **VIP Status Indicator**: At-a-glance health check of your VIP coverage targets.
 
-### 📱 Premium Mobile Experience
-- **Capacitor-Powered:** Cross-platform performance (Android/iOS) with native camera and filesystem access.
-- **Glassmorphic UI:** A modern, high-end design aesthetic that provides a premium feel for both photographers and guests.
-- **Event Access Kit:** Print-ready QR codes and digital access kits for easy guest onboarding.
+### 🖨️ Wireless Print Station
+**Instant physical distribution directly from your mobile hub.**
+-   **One-Tap Printing**: Send high-res, watermarked photos to any connected wireless printer (AirPrint/Mopria) directly from the sync grid.
+-   **Guest Print Requests**: (Beta) Enable guests to request physical commemorative prints from the web gallery.
 
 ---
 
 ## 🛠 Tech Stack
 
-### Frontend & Mobile
-- **Core:** [React 18](https://reactjs.org/) + [TypeScript](https://www.typescriptlang.org/)
-- **Build Tool:** [Vite](https://vitejs.dev/)
-- **Styling:** [Tailwind CSS](https://tailwindcss.com/)
-- **Animations:** [Framer Motion](https://www.framer.com/motion/)
-- **Mobile Bridge:** [Capacitor](https://capacitorjs.com/)
-- **Icons:** [Lucide React](https://lucide.dev/)
+### Elite Edge Computing
+-   **On-Device AI:** [@mediapipe/tasks-vision](https://developers.google.com/mediapipe) (BlazeFace / Face Detection)
+-   **Face Embedding:** Custom on-device 512-dimension vector calculation.
+-   **Local Database:** [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) (via `idb`) for persistent queueing.
 
-### State & Logic
-- **State Management:** [Zustand](https://github.com/pmndrs/zustand)
-- **Data Fetching:** [TanStack Query (React Query)](https://tanstack.com/query/latest)
-- **Form Validation:** [Zod](https://zod.dev/)
-- **API Client:** [Axios](https://axios-http.com/)
+### Native Mobile Bridge
+-   **Core:** [Capacitor 8](https://capacitorjs.com/)
+-   **Hardware Access:** `@capacitor/device` (Power/Health), `@capacitor/filesystem` (Local storage), `@capacitor/local-notifications` (Intelligence alerts).
+-   **UI Engine:** [React 18](https://reactjs.org/) + [Framer Motion](https://www.framer.com/motion/) (Glassmorphic HUD aesthetic).
 
-### AI & Infrastructure
-- **Vision Tasks:** [@mediapipe/tasks-vision](https://developers.google.com/mediapipe)
-- **Payments:** [Stripe](https://stripe.com/) / [Razorpay](https://razorpay.com/)
-- **Notifications:** [React Hot Toast](https://react-hot-toast.com/)
+### Infrastructure
+-   **State Management:** [Zustand](https://github.com/pmndrs/zustand) with persistence.
+-   **Data Sync:** [TanStack Query](https://tanstack.com/query/latest) + Custom Neural Queue logic.
+-   **Billing:** Stripe & Razorpay (Managed via Web Dashboard).
 
 ---
 
@@ -56,77 +56,61 @@ SnapMoment is a professional-grade, full-stack event photography platform design
 
 ### Prerequisites
 - [Node.js](https://nodejs.org/) (v18+)
-- [npm](https://www.npmjs.com/)
-- [Android Studio](https://developer.android.com/studio) (for Android builds)
+- [Android Studio](https://developer.android.com/studio) (for native mobile builds)
+- [idb](https://www.npmjs.com/package/idb) for data persistence.
 
-### Installation
+### Setup Protocol
 
-1. **Clone the repository:**
+1. **Clone & Initialize:**
    ```bash
    git clone https://github.com/JoelJose212/SnapMoment-App.git
-   cd SnapMoment-App
-   ```
-
-2. **Install dependencies:**
-   ```bash
    npm install
    ```
 
-3. **Environment Setup:**
-   Create a `.env` file in the root directory and configure your API URL:
+2. **Environment Configuration:**
+   Create a `.env` file for your machine's local IP (for mobile synchronization):
    ```env
    VITE_API_URL=http://your-machine-ip:8000
    ```
-   *Note: Use `10.0.2.2` if testing on an Android Emulator.*
 
-4. **Run development server:**
+3. **Elite Build Sync:**
+   To synchronize the web build with your Android/iOS devices:
+   ```bash
+   npm run cap:build
+   ```
+
+4. **Launch Mission Control:**
    ```bash
    npm run dev
    ```
 
 ---
 
-## 📱 Mobile Development
-
-### Build and Sync
-To synchronize your web build with the native platforms:
-```bash
-npm run cap:build
-```
-
-### Run on Android
-Open the project in Android Studio:
-```bash
-npm run android:open
-```
-
----
-
-## 📂 Project Structure
+## 📂 Elite Directory Mapping
 
 ```text
 src/
-├── components/     # Reusable UI components
-├── hooks/          # Custom React hooks
-├── lib/            # Library initializations (axios, stripe)
-├── pages/          # Feature-specific views
-│   ├── admin/      # Platform management
-│   ├── guest/      # Guest photo discovery
-│   └── photographer/ # Dashboard and event management
-├── store/          # Zustand global state
-├── App.tsx         # Main routing and layout
-└── main.tsx        # Application entry point
+├── components/
+│   └── photographer/ # Mission Control components
+├── lib/
+│   ├── ai.ts        # On-device Neural Engine
+│   └── queue.ts     # Persistent Sync Queue logic
+├── store/           # Zustand Stores (VIP, Auth, Health)
+├── pages/
+│   └── photographer/
+│       ├── PhotographerUpload.ts # Elite Ingestion Pipeline
+│       └── VIPMonitor.ts         # Neural Guard Dashboard
+└── App.tsx          # Platform-aware Routing
 ```
 
 ---
 
-## 📜 Available Scripts
+## 📜 Standard Operating Procedures (Scripts)
 
-- `npm run dev`: Start Vite development server.
-- `npm run build`: Build for production.
-- `npm run cap:build`: Build and sync with Capacitor.
-- `npm run android:open`: Open Android Studio project.
+- `npm run dev`: Boot local development environment.
+- `npm run cap:build`: Full sync of web artifacts to native mobile platforms.
+- `npm run android:open`: Deploy to Android Studio for hardware testing.
 
 ---
 
-Built with ❤️ for photographers and memory-makers.
+Built for the **next generation** of professional photographers.
