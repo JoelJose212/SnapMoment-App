@@ -2,6 +2,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { Camera, CalendarDays, BarChart2, User, LogOut, ArrowRight, AlertTriangle } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuthStore } from '../../store/authStore'
+import MissionControl from '../../components/photographer/MissionControl'
 
 const NAV = [
   { to: '/photographer/events', icon: CalendarDays, label: 'My Events' },
@@ -129,6 +130,10 @@ export default function PhotographerLayout() {
             </button>
           </motion.div>
         )}
+
+        {/* Elite Mode Hardware Dashboard */}
+        <MissionControl />
+
         <div className="h-full glass-card rounded-[2.5rem] overflow-hidden p-8 border-white/20">
           <Outlet />
         </div>

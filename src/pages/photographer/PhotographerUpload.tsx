@@ -3,10 +3,11 @@ import { useParams } from 'react-router-dom'
 import { useDropzone } from 'react-dropzone'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Upload, Trash2, Brain, CheckCircle, Image, X, Sparkles, CloudUpload, Zap, FolderSync, Play, Pause, Scan } from 'lucide-react'
+import { Upload, Trash2, Brain, CheckCircle, Image, X, Sparkles, CloudUpload, Zap, FolderSync, Play, Pause, Scan, Cpu, Terminal } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { photosApi } from '../../lib/api'
 import { scanImage } from '../../lib/ai'
+import { addToQueue, startSync } from '../../lib/queue'
 
 const SUPPORTED_EXTS = ['.jpeg', '.jpg', '.jpe', '.raw', '.cr3', '.webp', '.avif']
 
@@ -17,12 +18,10 @@ export default function PhotographerUpload() {
   const [isProcessingLocal, setIsProcessingLocal] = useState(false)
   const [currentFileName, setCurrentFileName] = useState('')
   const [processedCount, setProcessedCount] = useState(0)
-  const [totalBatchSize, setTotalBatchSize] = useState(0)
+  const [totalBatchSize, setTotalBatchSize] = useState(TotalBatchSize(0))
   
-  const [uploading, setUploading] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState(0)
+  const [syncingCount, setSyncingCount] = useState(0)
   const [processing, setProcessing] = useState(false)
-  const [processStatus, setProcessStatus] = useState<any>(null)
 
   // Tethering State
   const [isTethering, setIsTethering] = useState(false)
@@ -34,8 +33,8 @@ export default function PhotographerUpload() {
     queryFn: () => photosApi.list(eventId!).then((r) => r.data),
   })
 
-  // ── AI-Powered Ingestion Pipeline ─────────────────────────────────
-  const processAndUploadFiles = async (files: File[]) => {
+  // ── Elite Neural Ingestion Pipeline ─────────────────────────────────
+  const processAndQueueFiles = async (files: File[]) => {
     setTotalBatchSize(files.length)
     setProcessedCount(0)
     setIsProcessingLocal(true)
@@ -48,27 +47,34 @@ export default function PhotographerUpload() {
         // 1. On-Device AI Scan (BlazeFace/DeepFace logic)
         const { vectors } = await scanImage(file)
         
-        // 2. Transmit to Server with Vectors
-        setUploading(true)
-        const formData = new FormData()
-        formData.append('files', file)
-        
-        await photosApi.upload(eventId!, formData, setUploadProgress, vectors)
+        // 2. Add to Local Offline Queue (Persistent)
+        await addToQueue({
+          file,
+          eventId: eventId!,
+          vectors,
+          fileName: file.name
+        })
         
         setProcessedCount(prev => prev + 1)
       } catch (err) {
-        console.error(`AI Pipeline Failure for ${file.name}:`, err)
+        console.error(`Neural Ingestion Failure for ${file.name}:`, err)
         toast.error(`Ingestion error: ${file.name}`)
-      } finally {
-        setUploading(false)
-        setUploadProgress(0)
       }
     }
     
     setIsProcessingLocal(false)
-    toast.success(`Neural Ingestion Complete: ${files.length} frames optimized.`)
-    qc.invalidateQueries({ queryKey: ['event-photos', eventId] })
+    toast.success(`Neural Ingestion Complete: ${files.length} frames queued for background sync.`)
+    
+    // Trigger Sync immediately
+    startSync(setSyncingCount)
   }
+
+  // Hook into background sync to refresh the gallery when items finish
+  useEffect(() => {
+    if (syncingCount === 0) {
+      qc.invalidateQueries({ queryKey: ['event-photos', eventId] })
+    }
+  }, [syncingCount, eventId, qc])
 
   // Sync loop for Tethering
   useEffect(() => {
@@ -93,7 +99,7 @@ export default function PhotographerUpload() {
         }
 
         if (newFiles.length > 0) {
-          processAndUploadFiles(newFiles)
+          processAndQueueFiles(newFiles)
         }
       } catch (err) {
         setIsTethering(false)
@@ -120,7 +126,7 @@ export default function PhotographerUpload() {
       setTetherFolder(handle)
       setIsTethering(true)
       seenFilesRef.current.clear()
-      toast.success('Neural Live Tethering Active!')
+      toast.success('Elite Live Tethering Active!')
     } catch (err) {
       if ((err as Error).name !== 'AbortError') {
         toast.error('Failed to access local folder')
@@ -128,23 +134,9 @@ export default function PhotographerUpload() {
     }
   }
 
-  useEffect(() => {
-    let interval: ReturnType<typeof setInterval> | null = null;
-    const checkStatus = async () => {
-      try {
-        const res = await photosApi.processStatus(eventId!)
-        setProcessStatus(res.data)
-        setProcessing(res.data.status === 'processing' || res.data.status === 'queued')
-      } catch {}
-    }
-    checkStatus()
-    interval = setInterval(checkStatus, 3000)
-    return () => { if (interval) clearInterval(interval) }
-  }, [eventId])
-
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (!acceptedFiles.length) return
-    processAndUploadFiles(acceptedFiles)
+    processAndQueueFiles(acceptedFiles)
   }, [eventId, qc])
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: { 'image/*': [] }, multiple: true })
@@ -163,10 +155,10 @@ export default function PhotographerUpload() {
       <header className="px-2 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2 mb-2 text-primary font-bold text-xs uppercase tracking-[0.2em]">
-            <Scan size={14} className="animate-pulse" /> On-Device Neural Scan
+            <Terminal size={14} className="animate-pulse" /> Elite Protocol Ingestion
           </div>
           <h1 className="text-5xl font-extrabold tracking-tight text-foreground" style={{ fontFamily: '"Plus Jakarta Sans"' }}>Upload Photos</h1>
-          <p className="text-muted font-medium mt-2">Local AI vectorization active</p>
+          <p className="text-muted font-medium mt-2">Local Neural Scan & Persistent Queue</p>
         </div>
 
         <motion.button
@@ -184,44 +176,45 @@ export default function PhotographerUpload() {
           </div>
           <div className="text-left">
             <div className="text-sm font-black uppercase tracking-widest">
-              {isTethering ? 'Neural Tether Active' : 'Enable Neural Sync'}
+              {isTethering ? 'Elite Tether Active' : 'Enable Neural Sync'}
             </div>
             <div className="text-[10px] font-bold opacity-60">
-              Watching folder...
+              Auto-scanning local directory...
             </div>
           </div>
         </motion.button>
       </header>
 
-      {/* Neural Processing Overlay */}
+      {/* Neural Ingestion Overlay */}
       <AnimatePresence>
         {isProcessingLocal && (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-background/80 backdrop-blur-xl z-[100] flex flex-col items-center justify-center p-8 text-center"
+            className="fixed inset-0 bg-background/90 backdrop-blur-3xl z-[100] flex flex-col items-center justify-center p-8 text-center"
           >
-            <div className="w-32 h-32 rounded-full aurora-bg flex items-center justify-center text-white shadow-2xl mb-8 relative">
-              <Brain size={64} className="animate-pulse" />
-              <div className="absolute inset-0 rounded-full border-4 border-white/20 animate-ping" style={{ animationDuration: '3s' }} />
+            <div className="w-40 h-40 rounded-full aurora-bg flex items-center justify-center text-white shadow-[0_0_100px_rgba(255,110,108,0.4)] mb-8 relative">
+              <Brain size={80} className="animate-pulse" />
+              <div className="absolute inset-0 rounded-full border-4 border-white/20 animate-ping" style={{ animationDuration: '4s' }} />
             </div>
             
-            <h2 className="text-3xl font-black text-foreground uppercase tracking-tighter mb-2">Neural Scan in Progress</h2>
-            <p className="text-primary font-black text-xs uppercase tracking-[0.3em] mb-8">
-              Calculating Face Character Vectors ({processedCount + 1}/{totalBatchSize})
+            <h2 className="text-4xl font-black text-foreground uppercase tracking-tighter mb-2">Neural Scan Pipeline</h2>
+            <p className="text-primary font-black text-sm uppercase tracking-[0.4em] mb-12">
+              Processing Frame {processedCount + 1} of {totalBatchSize}
             </p>
             
-            <div className="w-full max-w-md bg-card border border-border/50 rounded-3xl p-6 shadow-2xl">
-              <div className="flex justify-between items-end mb-4">
-                <span className="text-[10px] font-black uppercase tracking-widest text-muted truncate w-48 text-left">
-                  Scanning: {currentFileName}
-                </span>
-                <span className="text-xl font-black text-foreground">
-                  {Math.round(((processedCount) / totalBatchSize) * 100)}%
+            <div className="w-full max-w-xl bg-card/60 border border-white/10 rounded-[3rem] p-10 shadow-2xl">
+              <div className="flex justify-between items-end mb-6">
+                <div className="text-left">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted block mb-1">Current Signature</span>
+                  <span className="text-sm font-bold text-foreground truncate block w-64">{currentFileName}</span>
+                </div>
+                <span className="text-4xl font-black text-foreground tabular-nums">
+                  {Math.round((processedCount / totalBatchSize) * 100)}%
                 </span>
               </div>
-              <div className="w-full h-3 rounded-full bg-border overflow-hidden">
+              <div className="w-full h-4 rounded-full bg-border/50 overflow-hidden relative">
                 <motion.div 
                    initial={{ width: 0 }}
                    animate={{ width: `${(processedCount / totalBatchSize) * 100}%` }}
@@ -229,12 +222,10 @@ export default function PhotographerUpload() {
                 />
               </div>
               
-              {uploading && (
-                <div className="mt-6 flex items-center justify-center gap-3">
-                  <CloudUpload size={16} className="text-primary animate-bounce" />
-                  <span className="text-[10px] font-black text-primary uppercase tracking-widest">Syncing Vector to Studio Grid...</span>
-                </div>
-              )}
+              <div className="mt-8 flex items-center justify-center gap-4">
+                <Cpu size={20} className="text-primary animate-spin-slow" />
+                <span className="text-[11px] font-black text-primary uppercase tracking-[0.2em]">Hashing Neural Vectors to Local Cache...</span>
+              </div>
             </div>
           </motion.div>
         )}
@@ -243,55 +234,63 @@ export default function PhotographerUpload() {
       <section>
         <div
           {...getRootProps()}
-          className={`relative group border-2 border-dashed rounded-[3rem] p-16 text-center cursor-pointer transition-all overflow-hidden ${
-            isDragActive ? 'border-primary bg-primary/5' : 'border-border bg-white/30 dark:bg-black/20'
+          className={`relative group border-2 border-dashed rounded-[4rem] p-24 text-center cursor-pointer transition-all overflow-hidden ${
+            isDragActive ? 'border-primary bg-primary/10 scale-[0.98]' : 'border-border bg-white/30 dark:bg-black/20'
           }`}
         >
           <input {...getInputProps()} />
           
-          <div className="relative z-0">
-            <div className="w-20 h-20 rounded-[2rem] glass border-white/40 flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:scale-110 group-hover:aurora-bg group-hover:text-white transition-all">
-              <Upload size={32} />
+          <div className="relative z-10">
+            <div className="w-24 h-24 rounded-[2.5rem] glass border-white/40 flex items-center justify-center mx-auto mb-8 shadow-xl group-hover:scale-110 group-hover:aurora-bg group-hover:text-white transition-all duration-500">
+              <Scan size={40} />
             </div>
-            <h3 className="text-2xl font-bold text-foreground">Initiate Neural Capture</h3>
-            <p className="text-muted mt-2 text-sm">Drag frames here for on-device AI vectorization</p>
+            <h3 className="text-3xl font-black text-foreground uppercase tracking-tight">Initiate elite Ingestion</h3>
+            <p className="text-muted mt-4 text-base font-medium">Automatic face recognition & background sync enabled</p>
           </div>
+          
+          {/* Decorative background grid */}
+          <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(var(--primary) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
         </div>
       </section>
 
       {/* Gallery View */}
       <section>
-        <div className="flex items-center justify-between mb-6 px-2">
-          <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
-            AI-Enhanced Gallery <span className="text-sm font-medium text-muted">({photos.length})</span>
-          </h3>
+        <div className="flex items-center justify-between mb-8 px-4">
+          <div className="flex items-center gap-3">
+            <h3 className="text-2xl font-black text-foreground uppercase tracking-tight">Sync Grid</h3>
+            <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest border border-primary/20">
+              {photos.length} Optimized Frames
+            </span>
+          </div>
         </div>
 
         {photos.length === 0 ? (
-          <div className="text-center py-20 bg-white/20 dark:bg-black/10 rounded-[2.5rem] border border-border border-dashed">
-            <Image size={48} className="mx-auto mb-4 opacity-10" />
-            <p className="text-muted font-medium italic">Neural network is waiting for input</p>
+          <div className="text-center py-32 bg-white/20 dark:bg-black/10 rounded-[4rem] border border-border border-dashed relative overflow-hidden">
+            <div className="absolute inset-0 aurora-bg opacity-5 blur-[100px]" />
+            <Image size={64} className="mx-auto mb-6 opacity-10" />
+            <p className="text-muted font-bold tracking-widest uppercase text-xs">Waiting for Neural Ingestion...</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
             {photos.map((photo: any) => (
               <motion.div 
                 key={photo.id} 
                 layout
-                whileHover={{ scale: 1.02 }}
-                className="relative group rounded-[2rem] overflow-hidden aspect-square glass border-white/20"
+                whileHover={{ scale: 1.05, y: -5 }}
+                className="relative group rounded-[2.5rem] overflow-hidden aspect-[4/5] glass border-white/20 shadow-lg"
               >
-                <img src={photo.thumbnail_url || photo.s3_url} alt="" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-4 flex flex-col justify-end">
+                <img src={photo.thumbnail_url || photo.s3_url} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-4 group-hover:translate-y-0">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black bg-primary/90 text-white px-2 py-1 rounded-lg backdrop-blur-sm uppercase tracking-widest">
-                      Processed
-                    </span>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-1">Synced</span>
+                      <span className="text-[8px] font-bold text-white/60 truncate w-24">Neural Match v4</span>
+                    </div>
                     <button
                       onClick={() => { if (confirm('Delete this frame?')) deleteMutation.mutate(photo.id) }}
-                      className="w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition-colors shadow-lg"
+                      className="w-10 h-10 rounded-2xl bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition-all shadow-xl active:scale-90"
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={16} />
                     </button>
                   </div>
                 </div>
@@ -302,4 +301,8 @@ export default function PhotographerUpload() {
       </section>
     </motion.div>
   )
+}
+
+function TotalBatchSize(arg0: number): any {
+  return arg0;
 }
