@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react'
+import { Device } from '@capacitor/device'
 import { Battery, Zap, HardDrive, Wifi, WifiOff, Activity, Cpu, UserCheck, AlertCircle } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getQueue, startSync } from '../../lib/queue'

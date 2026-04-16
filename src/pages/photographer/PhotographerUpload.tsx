@@ -165,7 +165,7 @@ export default function PhotographerUpload() {
                  <span className="text-4xl font-black tabular-nums">{Math.round((processedCount / totalBatchSize) * 100)}%</span>
                </div>
                <div className="w-full h-4 rounded-full bg-border overflow-hidden">
-                 <motion.div animate={{ width: \`\${(processedCount / totalBatchSize) * 100}%\` }} className="h-full aurora-bg" />
+                 <motion.div animate={{ width: `${(processedCount / totalBatchSize) * 100}%` }} className="h-full aurora-bg" />
                </div>
             </div>
           </motion.div>

@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { Camera, CalendarDays, BarChart2, User, LogOut, ArrowRight, AlertTriangle } from 'lucide-react'
+import { Camera, CalendarDays, BarChart2, User, LogOut, ArrowRight, AlertTriangle, UserCheck } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuthStore } from '../../store/authStore'
 import MissionControl from '../../components/photographer/MissionControl'
