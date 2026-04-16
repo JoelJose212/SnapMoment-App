@@ -28,6 +28,7 @@ import PhotographerQR from './pages/photographer/PhotographerQR'
 import PhotographerAnalytics from './pages/photographer/PhotographerAnalytics'
 import PhotographerProfile from './pages/photographer/PhotographerProfile'
 import OnboardingWizard from './pages/photographer/OnboardingWizard'
+import VIPMonitor from './pages/photographer/VIPMonitor'
 
 // Admin
 import AdminLayout from './pages/admin/AdminLayout'
@@ -71,6 +72,7 @@ export default function App() {
           <Route path="events" element={<PhotographerEvents />} />
           <Route path="events/:id/upload" element={<PhotographerUpload />} />
           <Route path="events/:id/qr" element={<PhotographerQR />} />
+          <Route path="events/:id/vips" element={<VIPMonitor />} />
           <Route path="analytics" element={<PhotographerAnalytics />} />
           <Route path="profile" element={<PhotographerProfile />} />
         </Route>

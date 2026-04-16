@@ -1,15 +1,18 @@
-import { useEffect, useState } from 'react'
-import { Device } from '@capacitor/device'
-import { Filesystem } from '@capacitor/filesystem'
-import { Battery, Zap, HardDrive, Wifi, WifiOff, Activity, Cpu } from 'lucide-react'
+import { Battery, Zap, HardDrive, Wifi, WifiOff, Activity, Cpu, UserCheck, AlertCircle } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getQueue, startSync } from '../../lib/queue'
+import { useVIPStore } from '../../store/vipStore'
 
 export default function MissionControl() {
   const [battery, setBattery] = useState<{ level?: number; isCharging?: boolean }>({})
-  const [storage, setStorage] = useState<{ free?: number; total?: number }>({})
   const [isOnline, setIsOnline] = useState(navigator.onLine)
   const [queueCount, setQueueCount] = useState(0)
+  const { vips } = useVIPStore()
+
+  const missingVips = vips.filter(v => {
+    if (!v.lastSeenAt) return true
+    return (Date.now() - v.lastSeenAt) > (30 * 60 * 1000)
+  })
 
   useEffect(() => {
     const updateStats = async () => {
@@ -105,6 +108,35 @@ export default function MissionControl() {
               <span className="text-[10px] font-black uppercase tracking-widest text-primary block leading-none">Sync Queue</span>
               <span className="text-xs font-black text-foreground">
                 {queueCount} Frames Pending
+              </span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* VIP Status */}
+      <AnimatePresence>
+        {vips.length > 0 && (
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className={`flex items-center gap-3 px-4 py-2 rounded-2xl border ${
+              missingVips.length > 0 ? 'bg-red-500/10 border-red-500/20' : 'bg-emerald-500/10 border-emerald-500/20'
+            }`}
+          >
+            {missingVips.length > 0 ? (
+              <AlertCircle size={16} className="text-red-400 animate-pulse" />
+            ) : (
+              <UserCheck size={16} className="text-emerald-400" />
+            )}
+            <div>
+              <span className={`text-[10px] font-black uppercase tracking-widest block leading-none ${
+                missingVips.length > 0 ? 'text-red-400' : 'text-emerald-400'
+              }`}>
+                VIP Status
+              </span>
+              <span className="text-xs font-bold text-foreground">
+                {missingVips.length > 0 ? `${missingVips.length} Missing Target(s)` : 'All Targets Captured'}
               </span>
             </div>
           </motion.div>

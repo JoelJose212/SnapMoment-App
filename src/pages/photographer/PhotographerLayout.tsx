@@ -7,6 +7,7 @@ import MissionControl from '../../components/photographer/MissionControl'
 const NAV = [
   { to: '/photographer/events', icon: CalendarDays, label: 'My Events' },
   { to: '/photographer/analytics', icon: BarChart2, label: 'Analytics' },
+  { to: '/photographer/vips', icon: UserCheck, label: 'VIP Monitor' },
   { to: '/photographer/profile', icon: User, label: 'Profile' },
 ]
 

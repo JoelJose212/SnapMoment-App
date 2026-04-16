@@ -1,5 +1,8 @@
 import { openDB, IDBPDatabase } from 'idb'
 import { photosApi } from './api'
+import { calculateSimilarity } from './ai'
+import { useVIPStore } from '../store/vipStore'
+import { LocalNotifications } from '@capacitor/local-notifications'
 
 export interface QueueItem {
   id?: number
@@ -47,6 +50,59 @@ export const updateQueueItem = async (item: QueueItem) => {
 }
 
 /**
+ * VIP Matching Logic: Compares new frame vectors against registered VIP guests.
+ */
+const processVIPMatching = async (item: QueueItem) => {
+  const vips = useVIPStore.getState().getVIPsByEvent(item.eventId)
+  if (vips.length === 0 || item.vectors.length === 0) return
+
+  for (const guest of vips) {
+    for (const faceVec of item.vectors) {
+      const score = calculateSimilarity(faceVec, guest.vector)
+      
+      // If match > 85%, update last seen
+      if (score >= 0.85) {
+        useVIPStore.getState().updateLastSeen(guest.id, Date.now())
+        break 
+      }
+    }
+  }
+}
+
+/**
+ * Background Monitoring Logic: Proactively checks for missing VIPs.
+ */
+const startVIPAlertMonitor = () => {
+  setInterval(async () => {
+    const vips = useVIPStore.getState().vips
+    const now = Date.now()
+    const thirtyMinutes = 30 * 60 * 1000
+
+    for (const v of vips) {
+      const lastSeen = v.lastSeenAt || 0
+      if (now - lastSeen > thirtyMinutes) {
+        try {
+          await LocalNotifications.schedule({
+            notifications: [{
+              title: 'VIP Coverage Alert! 🚨',
+              body: `VIP "${v.name}" hasn't been captured in over 30 minutes.`,
+              id: Math.floor(Math.random() * 10000),
+              schedule: { at: new Date(Date.now() + 1000) }
+            }]
+          })
+        } catch (e) {
+          console.warn('Notifications permission denied or unavailable.')
+        }
+      }
+    }
+  }, 10 * 60 * 1000) // Check every 10 minutes
+}
+
+if (typeof window !== 'undefined') {
+  startVIPAlertMonitor()
+}
+
+/**
  * Background Sync Logic
  * Monitors connectivity and processes the queue sequentially.
  */
@@ -79,6 +135,9 @@ export const startSync = async (onProgress?: (count: number) => void) => {
       const formData = new FormData()
       formData.append('files', next.file, next.fileName)
       
+      // Perform VIP matching before/during upload
+      await processVIPMatching(next)
+
       await photosApi.upload(next.eventId, formData, undefined, next.vectors)
       
       // Success! Remove from queue.
@@ -92,8 +151,8 @@ export const startSync = async (onProgress?: (count: number) => void) => {
       next.status = 'failed'
       next.retryCount += 1
       
-      if (next.retryCount > 5) {
-        // Abandon after 5 retries
+      if (next.retryCount > 3) {
+        // Abandon after 3 retries
         await removeFromQueue(next.id!)
       } else {
         await updateQueueItem(next)
