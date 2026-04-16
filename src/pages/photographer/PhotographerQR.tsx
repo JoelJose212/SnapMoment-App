@@ -4,6 +4,7 @@ import { QRCodeSVG } from 'qrcode.react'
 import { Copy, Download, Printer, Share2, Sparkles, ExternalLink } from 'lucide-react'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
+import { eventsApi } from '../../lib/api'
 import { getWebUrl } from '../../lib/platform'
 
 export default function PhotographerQR() {
